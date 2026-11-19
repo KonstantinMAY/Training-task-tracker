@@ -1,4 +1,3 @@
-import { useDroppable } from '@dnd-kit/core';
 import { useState } from 'react';
 import {
   DndContext,
@@ -8,13 +7,14 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
+  useDroppable,
 } from '@dnd-kit/core';
 import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core';
-import { SortableContext, arrayMove, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { mockTasks } from '../mockData';
 import type { Task } from '../mockData';
+import { useTaskStore } from '../store/useTaskStore';
 
 const COLUMNS = ['todo', 'in_progress', 'review', 'done'];
 
@@ -43,8 +43,9 @@ function TaskCard({ task }: { task: Task }) {
   );
 }
 
+// Компонент колонки
 function Column({ id, tasks }: { id: string; tasks: Task[] }) {
-  // Делаем колонку зоной, куда можно сбрасывать
+  // Делаем колонку зоной для сброса (чтобы работало перетаскивание в пустые колонки)
   const { setNodeRef } = useDroppable({
     id: id,
   });
@@ -52,7 +53,6 @@ function Column({ id, tasks }: { id: string; tasks: Task[] }) {
   return (
     <div className="kanban-column">
       <h3>{COLUMN_TITLES[id]}</h3>
-      {/* Добавляем setNodeRef сюда, чтобы вся область колонки ловила дроп */}
       <div className="column-content" ref={setNodeRef}>
         <SortableContext items={tasks.map((t) => t.id)} strategy={verticalListSortingStrategy}>
           {tasks.map((task) => (
@@ -66,7 +66,10 @@ function Column({ id, tasks }: { id: string; tasks: Task[] }) {
 
 // Главный компонент доски
 export default function KanbanBoard() {
-  const [tasks, setTasks] = useState<Task[]>(mockTasks);
+  // Берем данные из Zustand
+  const tasks = useTaskStore((state) => state.tasks);
+  const moveTask = useTaskStore((state) => state.moveTask);
+  
   const [activeTask, setActiveTask] = useState<Task | null>(null);
 
   const sensors = useSensors(
@@ -84,28 +87,24 @@ export default function KanbanBoard() {
     const { active, over } = event;
     if (!over) return;
 
-    const activeId = active.id;
-    const overId = over.id;
+    const activeId = active.id as string;
+    const overId = over.id as string;
 
     if (activeId === overId) return;
 
     const activeTask = tasks.find((t) => t.id === activeId);
     if (!activeTask) return;
 
-    // Если перетащили в другую колонку
-    if (COLUMNS.includes(overId as string)) {
-      setTasks((prev) =>
-        prev.map((t) => (t.id === activeId ? { ...t, status: overId as Task['status'] } : t))
-      );
+    // Если перетащили в пустую колонку
+    if (COLUMNS.includes(overId)) {
+      moveTask(activeId, overId as Task['status']);
       return;
     }
 
     // Если перетащили на другую карточку
     const overTask = tasks.find((t) => t.id === overId);
     if (overTask && activeTask.status !== overTask.status) {
-      setTasks((prev) =>
-        prev.map((t) => (t.id === activeId ? { ...t, status: overTask.status } : t))
-      );
+      moveTask(activeId, overTask.status);
     }
   };
 
