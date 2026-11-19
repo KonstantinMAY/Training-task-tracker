@@ -1,17 +1,21 @@
-import './App.css'
-import KanbanBoard from './components/KanbanBoard'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import Login from './pages/Login';
+import Board from './pages/Board';
+import './App.css';
 
 function App() {
   return (
-    <div className="app-container">
-      <header className="app-header">
-        <h1>Учебный трекер задач</h1>
-      </header>
-      <main className="board-container">
-        <KanbanBoard />
-      </main>
-    </div>
-  )
+    <BrowserRouter>
+      <Routes>
+        {/* По умолчанию перекидываем на страницу логина */}
+        <Route path="/" element={<Navigate to="/login" replace />} />
+        {/* Страница входа (делает Фронтендер 2) */}
+        <Route path="/login" element={<Login />} />
+        {/* Сама доска (делает Тимлид + Фронтендер 3) */}
+        <Route path="/board" element={<Board />} />
+      </Routes>
+    </BrowserRouter>
+  );
 }
 
-export default App
+export default App;
