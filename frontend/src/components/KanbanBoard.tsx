@@ -52,10 +52,10 @@ function TaskCard({ task, onEdit }: { task: Task; onEdit: (task: Task) => void }
         <h4>{task.title}</h4>
         <div className="task-actions">
           <button className="edit-btn" onClick={handleEdit} title="Редактировать">
-            ✏️
+            Ред.
           </button>
           <button className="delete-btn" onClick={handleDelete} title="Удалить">
-            ✕
+            Удал.
           </button>
         </div>
       </div>
