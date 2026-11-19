@@ -12,25 +12,23 @@ export default function AddTaskModal({ isOpen, onClose }: AddTaskModalProps) {
   
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [priority, setPriority] = useState<'low' | 'high'>('low');
+  const [priority, setPriority] = useState<'low' | 'medium' | 'high'>('low');
 
   if (!isOpen) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim()) return; // Запрещаем создавать пустые задачи
+    if (!title.trim()) return;
 
     const newTask: Task = {
-      id: Date.now().toString(), // Генерируем уникальный ID на основе времени
+      id: Date.now().toString(),
       title,
       description,
-      status: 'todo', // Новая задача всегда падает в "Нужно сделать"
+      status: 'todo',
       priority,
     };
 
     addTask(newTask);
-    
-    // Очищаем форму и закрываем окно
     setTitle('');
     setDescription('');
     setPriority('low');
@@ -57,9 +55,10 @@ export default function AddTaskModal({ isOpen, onClose }: AddTaskModalProps) {
           
           <select 
             value={priority} 
-            onChange={(e) => setPriority(e.target.value as 'low' | 'high')}
+            onChange={(e) => setPriority(e.target.value as 'low' | 'medium' | 'high')}
           >
             <option value="low">Низкий приоритет</option>
+            <option value="medium">Средний приоритет</option>
             <option value="high">Высокий приоритет</option>
           </select>
 

@@ -15,6 +15,7 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import type { Task } from '../mockData';
 import { useTaskStore } from '../store/useTaskStore';
+import EditTaskModal from './EditTaskModal';
 
 const COLUMNS = ['todo', 'in_progress', 'review', 'done'];
 
@@ -25,18 +26,39 @@ const COLUMN_TITLES: Record<string, string> = {
   done: 'Готово',
 };
 
-// Компонент одной карточки
-function TaskCard({ task }: { task: Task }) {
+// Компонент карточки
+function TaskCard({ task, onEdit }: { task: Task; onEdit: (task: Task) => void }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: task.id });
+  const deleteTask = useTaskStore((state) => state.deleteTask);
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
   };
 
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    deleteTask(task.id);
+  };
+
+  const handleEdit = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onEdit(task);
+  };
+
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="task-card">
-      <h4>{task.title}</h4>
+      <div className="task-header">
+        <h4>{task.title}</h4>
+        <div className="task-actions">
+          <button className="edit-btn" onClick={handleEdit} title="Редактировать">
+            ✏️
+          </button>
+          <button className="delete-btn" onClick={handleDelete} title="Удалить">
+            ✕
+          </button>
+        </div>
+      </div>
       <p>{task.description}</p>
       <span className={`priority ${task.priority}`}>{task.priority}</span>
     </div>
@@ -44,11 +66,8 @@ function TaskCard({ task }: { task: Task }) {
 }
 
 // Компонент колонки
-function Column({ id, tasks }: { id: string; tasks: Task[] }) {
-  // Делаем колонку зоной для сброса (чтобы работало перетаскивание в пустые колонки)
-  const { setNodeRef } = useDroppable({
-    id: id,
-  });
+function Column({ id, tasks, onEditTask }: { id: string; tasks: Task[]; onEditTask: (task: Task) => void }) {
+  const { setNodeRef } = useDroppable({ id: id });
 
   return (
     <div className="kanban-column">
@@ -56,7 +75,7 @@ function Column({ id, tasks }: { id: string; tasks: Task[] }) {
       <div className="column-content" ref={setNodeRef}>
         <SortableContext items={tasks.map((t) => t.id)} strategy={verticalListSortingStrategy}>
           {tasks.map((task) => (
-            <TaskCard key={task.id} task={task} />
+            <TaskCard key={task.id} task={task} onEdit={onEditTask} />
           ))}
         </SortableContext>
       </div>
@@ -64,13 +83,13 @@ function Column({ id, tasks }: { id: string; tasks: Task[] }) {
   );
 }
 
-// Главный компонент доски
+// Главный компонент
 export default function KanbanBoard() {
-  // Берем данные из Zustand
   const tasks = useTaskStore((state) => state.tasks);
   const moveTask = useTaskStore((state) => state.moveTask);
   
   const [activeTask, setActiveTask] = useState<Task | null>(null);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -95,13 +114,11 @@ export default function KanbanBoard() {
     const activeTask = tasks.find((t) => t.id === activeId);
     if (!activeTask) return;
 
-    // Если перетащили в пустую колонку
     if (COLUMNS.includes(overId)) {
       moveTask(activeId, overId as Task['status']);
       return;
     }
 
-    // Если перетащили на другую карточку
     const overTask = tasks.find((t) => t.id === overId);
     if (overTask && activeTask.status !== overTask.status) {
       moveTask(activeId, overTask.status);
@@ -117,7 +134,12 @@ export default function KanbanBoard() {
     >
       <div className="kanban-board">
         {COLUMNS.map((col) => (
-          <Column key={col} id={col} tasks={tasks.filter((t) => t.status === col)} />
+          <Column 
+            key={col} 
+            id={col} 
+            tasks={tasks.filter((t) => t.status === col)} 
+            onEditTask={(task) => setEditingTask(task)} 
+          />
         ))}
       </div>
       <DragOverlay>
@@ -127,6 +149,12 @@ export default function KanbanBoard() {
           </div>
         ) : null}
       </DragOverlay>
+
+      <EditTaskModal 
+        isOpen={!!editingTask} 
+        task={editingTask} 
+        onClose={() => setEditingTask(null)} 
+      />
     </DndContext>
   );
 }
