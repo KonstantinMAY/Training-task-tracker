@@ -1,3 +1,4 @@
+import { useDroppable } from '@dnd-kit/core';
 import { useState } from 'react';
 import {
   DndContext,
@@ -42,18 +43,23 @@ function TaskCard({ task }: { task: Task }) {
   );
 }
 
-// Компонент колонки
 function Column({ id, tasks }: { id: string; tasks: Task[] }) {
+  // Делаем колонку зоной, куда можно сбрасывать
+  const { setNodeRef } = useDroppable({
+    id: id,
+  });
+
   return (
     <div className="kanban-column">
       <h3>{COLUMN_TITLES[id]}</h3>
-      <SortableContext items={tasks.map((t) => t.id)} strategy={verticalListSortingStrategy}>
-        <div className="column-content">
+      {/* Добавляем setNodeRef сюда, чтобы вся область колонки ловила дроп */}
+      <div className="column-content" ref={setNodeRef}>
+        <SortableContext items={tasks.map((t) => t.id)} strategy={verticalListSortingStrategy}>
           {tasks.map((task) => (
             <TaskCard key={task.id} task={task} />
           ))}
-        </div>
-      </SortableContext>
+        </SortableContext>
+      </div>
     </div>
   );
 }
