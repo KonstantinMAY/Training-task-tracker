@@ -3,12 +3,17 @@ import { useNavigate } from 'react-router-dom';
 
 export default function Login() {
   const navigate = useNavigate();
+  
+  // Стейт для переключения между входом и регистрацией
+  const [isLogin, setIsLogin] = useState(true); 
+  
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
     if (!email.includes('@')) {
       setError('Введите корректный Email');
       return;
@@ -17,20 +22,28 @@ export default function Login() {
       setError('Пароль должен быть не меньше 3 символов');
       return;
     }
+    
     setError('');
+    
+    // Сохраняем email для отображения аватарки в шапке
     localStorage.setItem('userEmail', email);
+    
+    // Если это регистрация, можно было бы сделать запрос к бэкенду.
+    // Пока просто перекидываем на доску.
     navigate('/board'); 
   };
 
   return (
     <div className="login-container">
-      <form onSubmit={handleLogin} className="login-form">
-        <h2>С возвращением!</h2>
-        <p className="login-subtitle">Войдите, чтобы продолжить работу</p>
+      <form onSubmit={handleSubmit} className="login-form">
+        {/* Меняем заголовок в зависимости от режима */}
+        <h2>{isLogin ? 'С возвращением!' : 'Создать аккаунт'}</h2>
+        <p className="login-subtitle">
+          {isLogin ? 'Войдите, чтобы продолжить работу' : 'Зарегистрируйтесь, чтобы начать'}
+        </p>
         
         {error && <div className="error-message">{error}</div>}
         
-        {/* Блоки input-group остались, но без иконок внутри */}
         <div className="input-group">
           <input 
             type="email" 
@@ -49,7 +62,14 @@ export default function Login() {
           />
         </div>
         
-        <button type="submit" className="login-btn">Войти</button>
+        <button type="submit" className="login-btn">
+          {isLogin ? 'Войти' : 'Зарегистрироваться'}
+        </button>
+
+        {/* Кнопка переключения режима */}
+        <p className="toggle-auth" onClick={() => { setIsLogin(!isLogin); setError(''); }}>
+          {isLogin ? 'Нет аккаунта? Зарегистрироваться' : 'Уже есть аккаунт? Войти'}
+        </p>
       </form>
     </div>
   );

@@ -1,20 +1,20 @@
 /* =========================================
-   СТИЛИ ДЛЯ ЛОГИНА (Темная тема)
+   СТИЛИ ДЛЯ ЛОГИНА
    ========================================= */
 .login-container {
   display: flex;
   justify-content: center;
   align-items: center;
   height: 100vh;
-  background-color: #000000; /* Черный фон */
+  background-color: var(--bg-main);
 }
 
 .login-form {
-  background: #121212; /* Темно-серая карточка, чтобы не сливалась */
+  background: var(--bg-modal);
   padding: 40px;
   border-radius: 16px;
-  border: 1px solid #2a2a2a; /* Тонкая рамка */
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.8); /* Глубокая тень */
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-modal);
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -24,48 +24,39 @@
 
 .login-form h2 {
   text-align: center;
-  color: #ffffff; /* Белый заголовок */
+  color: var(--text-main);
   margin: 0;
   font-size: 28px;
 }
 
 .login-subtitle {
   text-align: center;
-  color: #888888; /* Серый подзаголовок */
+  color: var(--text-muted);
   margin: -10px 0 10px 0;
   font-size: 14px;
 }
 
-.input-group {
-  display: flex;
-  align-items: center;
-}
+.input-group { display: flex; align-items: center; }
 
 .input-group input {
   width: 100%;
-  /* Убрали большой отступ слева (45px), так как иконок больше нет */
   padding: 14px 15px; 
-  background-color: #1e1e1e; /* Темный фон инпута */
-  color: #ffffff; /* Белый текст при вводе */
-  border: 2px solid #333333; /* Темная рамка */
+  background-color: var(--bg-input);
+  color: var(--text-main);
+  border: 2px solid var(--border-color);
   border-radius: 8px;
   font-size: 16px;
   transition: all 0.3s;
-  box-sizing: border-box;
-  outline: none;
 }
 
-.input-group input::placeholder {
-  color: #666666; /* Темно-серый плейсхолдер */
-}
+.input-group input::placeholder { color: var(--text-muted); }
 
 .input-group input:focus {
-  border-color: #ffffff; /* При клике рамка становится белой */
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+  border-color: #888;
 }
 
 .error-message {
-  background: rgba(239, 68, 68, 0.1); /* Полупрозрачный красный фон */
+  background: rgba(239, 68, 68, 0.1);
   color: #ef4444;
   padding: 10px;
   border-radius: 8px;
@@ -76,8 +67,8 @@
 
 .login-btn {
   padding: 14px;
-  background-color: #ffffff; /* Белая кнопка */
-  color: #000000; /* Черный текст */
+  background-color: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
   border: none;
   border-radius: 8px;
   font-size: 16px;
@@ -87,23 +78,22 @@
 }
 
 .login-btn:hover {
-  background-color: #e0e0e0; /* Чуть темнеет при наведении */
   transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(255, 255, 255, 0.2);
+  opacity: 0.9;
 }
 
 /* =========================================
    СТИЛИ ДЛЯ ШАПКИ (Header)
    ========================================= */
-/* Переопределяем базовую шапку, чтобы добавить justify-content */
 .app-header {
   display: flex;
-  justify-content: space-between !important; /* Кнопка справа */
+  justify-content: space-between !important;
   align-items: center;
   padding: 0 20px;
   height: 60px;
-  background-color: #1e1e1e;
-  color: white;
+  background-color: var(--bg-header);
+  color: var(--text-main);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .logo {
@@ -118,6 +108,22 @@
   display: flex;
   align-items: center;
   gap: 20px;
+}
+
+/* Кнопка темы */
+.theme-btn {
+  background: transparent;
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.3s;
+}
+
+.theme-btn:hover {
+  background: var(--bg-input);
 }
 
 .user-profile {
@@ -141,7 +147,7 @@
 
 .user-email {
   font-size: 14px;
-  color: #bbb;
+  color: var(--text-muted);
 }
 
 .logout-btn {
@@ -159,4 +165,22 @@
 .logout-btn:hover {
   background-color: #ff6b6b;
   color: white;
+}
+
+/* --- Стиль для ссылки переключения Вход/Регистрация --- */
+.toggle-auth {
+  text-align: center;
+  font-size: 14px;
+  color: #0052cc; /* Синий цвет ссылки */
+  cursor: pointer;
+  margin-top: 10px;
+  transition: color 0.2s;
+}
+
+.toggle-auth:hover {
+  text-decoration: underline;
+}
+
+body.dark-theme .toggle-auth {
+  color: #64b5f6;
 }
