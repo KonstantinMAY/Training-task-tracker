@@ -8,22 +8,24 @@
   --bg-main: #f4f5f7;
   --bg-column: #ebecf0;
   --bg-card: #ffffff;
-  --bg-header: #ffffff;
+  --bg-header: #1e1e1e; /* Шапка теперь всегда темная */
   --bg-modal: #ffffff;
-  --bg-input: #f4f5f7;
+  --bg-input: #ffffff;
   
-  --text-main: #172b4d;
-  --text-muted: #5e6c84;
-  --border-color: #dfe1e6;
-  --shadow-card: 0 1px 3px rgba(0,0,0,0.12);
-  --shadow-modal: 0 8px 30px rgba(0,0,0,0.2);
+  /* МЯГКИЙ ТЕКСТ И СЕРЫЕ РАМКИ */
+  --text-main: #1f2937; 
+  --text-muted: #6b7280;
+  --border-color: #d1d5db; 
+  --shadow-card: 0 1px 3px rgba(0,0,0,0.1);
+  --shadow-modal: 0 8px 30px rgba(0,0,0,0.15);
   
-  --btn-primary-bg: #0052cc;
+  /* КНОПКИ ЧЕРНЫЕ С БЕЛЫМ ТЕКСТОМ */
+  --btn-primary-bg: #1f2937;
   --btn-primary-text: #ffffff;
 }
 
 body.dark-theme {
-  /* ТЕМНАЯ ТЕМА (переопределяем переменные) */
+  /* ТЕМНАЯ ТЕМА */
   --bg-main: #000000;
   --bg-column: #121212;
   --bg-card: #1e1e1e;
@@ -37,6 +39,7 @@ body.dark-theme {
   --shadow-card: 0 1px 3px rgba(0,0,0,0.5);
   --shadow-modal: 0 4px 12px rgba(0,0,0,0.5);
   
+  /* В ТЕМНОЙ ТЕМЕ КНОПКИ БЕЛЫЕ */
   --btn-primary-bg: #ffffff;
   --btn-primary-text: #000000;
 }
@@ -80,7 +83,7 @@ body {
   display: flex;
   flex-direction: column;
   max-height: 100%;
-  transition: background-color 0.3s;
+  transition: background-color 0.3s, border-color 0.3s;
 }
 
 .kanban-column h3 {
@@ -109,7 +112,7 @@ body {
   box-shadow: var(--shadow-card);
   cursor: grab;
   user-select: none;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.3s;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.3s, border-color 0.3s;
 }
 
 .task-card:hover {

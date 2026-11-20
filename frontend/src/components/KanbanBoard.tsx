@@ -1,13 +1,7 @@
 import { useState } from 'react';
 import {
-  DndContext,
-  DragOverlay,
-  closestCorners,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  useDroppable,
+  DndContext, DragOverlay, closestCorners, KeyboardSensor, PointerSensor,
+  useSensor, useSensors, useDroppable,
 } from '@dnd-kit/core';
 import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
@@ -26,7 +20,6 @@ const COLUMN_TITLES: Record<string, string> = {
   done: 'Готово',
 };
 
-// Компонент карточки
 function TaskCard({ task, onEdit }: { task: Task; onEdit: (task: Task) => void }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: task.id });
   const deleteTask = useTaskStore((state) => state.deleteTask);
@@ -46,26 +39,49 @@ function TaskCard({ task, onEdit }: { task: Task; onEdit: (task: Task) => void }
     onEdit(task);
   };
 
+  // --- ФУНКЦИЯ ПОДСЧЕТА ДЕДЛАЙНА ---
+  const calculateDeadline = (dateStr?: string) => {
+    if (!dateStr) return null;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const deadlineDate = new Date(dateStr);
+    deadlineDate.setHours(0, 0, 0, 0);
+
+    const diffTime = deadlineDate.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays < 0) return { text: `Просрочено на ${Math.abs(diffDays)} дн.`, color: '#ef4444' };
+    if (diffDays === 0) return { text: 'Сегодня', color: '#f57c00' };
+    if (diffDays === 1) return { text: 'Завтра', color: '#f57c00' };
+    return { text: `Осталось дней: ${diffDays}`, color: 'var(--text-muted)' };
+  };
+
+  const deadlineInfo = calculateDeadline(task.deadline);
+
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="task-card">
       <div className="task-header">
         <h4>{task.title}</h4>
         <div className="task-actions">
-          <button className="edit-btn" onClick={handleEdit} title="Редактировать">
-            Ред.
-          </button>
-          <button className="delete-btn" onClick={handleDelete} title="Удалить">
-            Удал.
-          </button>
+          <button className="edit-btn" onClick={handleEdit} title="Редактировать">Ред.</button>
+          <button className="delete-btn" onClick={handleDelete} title="Удалить">Удал.</button>
         </div>
       </div>
       <p>{task.description}</p>
-      <span className={`priority ${task.priority}`}>{task.priority}</span>
+      
+      {/* Нижняя панель карточки: приоритет и дедлайн (без смайликов) */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px' }}>
+        <span className={`priority ${task.priority}`}>{task.priority}</span>
+        {deadlineInfo && (
+          <span style={{ fontSize: '11px', color: deadlineInfo.color, fontWeight: 'bold' }}>
+            {deadlineInfo.text}
+          </span>
+        )}
+      </div>
     </div>
   );
 }
 
-// Компонент колонки
 function Column({ id, tasks, onEditTask }: { id: string; tasks: Task[]; onEditTask: (task: Task) => void }) {
   const { setNodeRef } = useDroppable({ id: id });
 
@@ -83,7 +99,6 @@ function Column({ id, tasks, onEditTask }: { id: string; tasks: Task[]; onEditTa
   );
 }
 
-// Главный компонент
 export default function KanbanBoard() {
   const tasks = useTaskStore((state) => state.tasks);
   const moveTask = useTaskStore((state) => state.moveTask);
@@ -110,7 +125,6 @@ export default function KanbanBoard() {
     const overId = over.id as string;
 
     if (activeId === overId) return;
-
     const activeTask = tasks.find((t) => t.id === activeId);
     if (!activeTask) return;
 
@@ -126,35 +140,18 @@ export default function KanbanBoard() {
   };
 
   return (
-    <DndContext
-      sensors={sensors}
-      collisionDetection={closestCorners}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
-    >
+    <DndContext sensors={sensors} collisionDetection={closestCorners} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <div className="kanban-board">
         {COLUMNS.map((col) => (
-          <Column 
-            key={col} 
-            id={col} 
-            tasks={tasks.filter((t) => t.status === col)} 
-            onEditTask={(task) => setEditingTask(task)} 
-          />
+          <Column key={col} id={col} tasks={tasks.filter((t) => t.status === col)} onEditTask={(task) => setEditingTask(task)} />
         ))}
       </div>
       <DragOverlay>
         {activeTask ? (
-          <div className="task-card dragging">
-            <h4>{activeTask.title}</h4>
-          </div>
+          <div className="task-card dragging"><h4>{activeTask.title}</h4></div>
         ) : null}
       </DragOverlay>
-
-      <EditTaskModal 
-        isOpen={!!editingTask} 
-        task={editingTask} 
-        onClose={() => setEditingTask(null)} 
-      />
+      <EditTaskModal isOpen={!!editingTask} task={editingTask} onClose={() => setEditingTask(null)} />
     </DndContext>
   );
 }

@@ -43,7 +43,7 @@
   padding: 14px 15px; 
   background-color: var(--bg-input);
   color: var(--text-main);
-  border: 2px solid var(--border-color);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   font-size: 16px;
   transition: all 0.3s;
@@ -51,8 +51,11 @@
 
 .input-group input::placeholder { color: var(--text-muted); }
 
+/* Красивая синяя рамка при клике на инпут */
 .input-group input:focus {
-  border-color: #888;
+  border-color: #3b82f6; 
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .error-message {
@@ -91,9 +94,8 @@
   align-items: center;
   padding: 0 20px;
   height: 60px;
-  background-color: var(--bg-header);
-  color: var(--text-main);
-  border-bottom: 1px solid var(--border-color);
+  background-color: #1e1e1e; /* Черная шапка */
+  border-bottom: 1px solid #333;
 }
 
 .logo {
@@ -102,6 +104,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  color: #facc15; /* Желтый текст */
 }
 
 .header-right {
@@ -113,8 +116,8 @@
 /* Кнопка темы */
 .theme-btn {
   background: transparent;
-  color: var(--text-main);
-  border: 1px solid var(--border-color);
+  color: #facc15; /* Желтая иконка */
+  border: 1px solid #444;
   padding: 6px 12px;
   border-radius: 6px;
   cursor: pointer;
@@ -123,7 +126,8 @@
 }
 
 .theme-btn:hover {
-  background: var(--bg-input);
+  background: #333;
+  border-color: #facc15;
 }
 
 .user-profile {
@@ -147,7 +151,7 @@
 
 .user-email {
   font-size: 14px;
-  color: var(--text-muted);
+  color: #facc15; /* Желтый текст */
 }
 
 .logout-btn {
@@ -167,13 +171,15 @@
   color: white;
 }
 
-/* --- Стиль для ссылки переключения Вход/Регистрация --- */
+/* --- Ссылка переключения Вход/Регистрация --- */
+/* --- Ссылка переключения Вход/Регистрация --- */
 .toggle-auth {
   text-align: center;
   font-size: 14px;
-  color: #0052cc; /* Синий цвет ссылки */
+  color: var(--text-main); /* Темно-серый/черный цвет в светлой теме */
   cursor: pointer;
   margin-top: 10px;
+  font-weight: 600;
   transition: color 0.2s;
 }
 
@@ -182,5 +188,22 @@
 }
 
 body.dark-theme .toggle-auth {
-  color: #64b5f6;
+  color: var(--text-main); /* Белый цвет в темной теме */
+}
+
+.theme-toggle {
+  background: transparent;
+  border: none;
+  color: #facc15; /* Желтая иконка */
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s, transform 0.2s;
+}
+.theme-toggle:hover {
+  background-color: #333;
+  transform: scale(1.1);
 }
