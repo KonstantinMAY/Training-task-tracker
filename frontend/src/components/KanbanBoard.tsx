@@ -13,11 +13,20 @@ import EditTaskModal from './EditTaskModal';
 
 const COLUMNS = ['todo', 'in_progress', 'review', 'done'];
 
+// Обычные названия колонок
 const COLUMN_TITLES: Record<string, string> = {
   todo: 'Нужно сделать',
   in_progress: 'В работе',
   review: 'На проверке',
   done: 'Готово',
+};
+
+// ОБНОВЛЕННЫЕ кошачьи названия
+const CAT_COLUMN_TITLES: Record<string, string> = {
+  todo: 'Жалкая работа кожаных, мяу',
+  in_progress: 'на ОХОТЕ',
+  review: 'Под проверкой Неко',
+  done: 'Склад добычи',
 };
 
 function TaskCard({ task, onEdit }: { task: Task; onEdit: (task: Task) => void }) {
@@ -39,7 +48,6 @@ function TaskCard({ task, onEdit }: { task: Task; onEdit: (task: Task) => void }
     onEdit(task);
   };
 
-  // --- ФУНКЦИЯ ПОДСЧЕТА ДЕДЛАЙНА ---
   const calculateDeadline = (dateStr?: string) => {
     if (!dateStr) return null;
     const today = new Date();
@@ -69,7 +77,6 @@ function TaskCard({ task, onEdit }: { task: Task; onEdit: (task: Task) => void }
       </div>
       <p>{task.description}</p>
       
-      {/* Нижняя панель карточки: приоритет и дедлайн (без смайликов) */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px' }}>
         <span className={`priority ${task.priority}`}>{task.priority}</span>
         {deadlineInfo && (
@@ -82,12 +89,12 @@ function TaskCard({ task, onEdit }: { task: Task; onEdit: (task: Task) => void }
   );
 }
 
-function Column({ id, tasks, onEditTask }: { id: string; tasks: Task[]; onEditTask: (task: Task) => void }) {
+function Column({ id, tasks, onEditTask, isCatTheme }: { id: string; tasks: Task[]; onEditTask: (task: Task) => void; isCatTheme?: boolean }) {
   const { setNodeRef } = useDroppable({ id: id });
 
   return (
     <div className="kanban-column">
-      <h3>{COLUMN_TITLES[id]}</h3>
+      <h3>{isCatTheme ? CAT_COLUMN_TITLES[id] : COLUMN_TITLES[id]}</h3>
       <div className="column-content" ref={setNodeRef}>
         <SortableContext items={tasks.map((t) => t.id)} strategy={verticalListSortingStrategy}>
           {tasks.map((task) => (
@@ -99,7 +106,7 @@ function Column({ id, tasks, onEditTask }: { id: string; tasks: Task[]; onEditTa
   );
 }
 
-export default function KanbanBoard() {
+export default function KanbanBoard({ isCatTheme }: { isCatTheme?: boolean }) {
   const tasks = useTaskStore((state) => state.tasks);
   const moveTask = useTaskStore((state) => state.moveTask);
   
@@ -143,7 +150,13 @@ export default function KanbanBoard() {
     <DndContext sensors={sensors} collisionDetection={closestCorners} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <div className="kanban-board">
         {COLUMNS.map((col) => (
-          <Column key={col} id={col} tasks={tasks.filter((t) => t.status === col)} onEditTask={(task) => setEditingTask(task)} />
+          <Column 
+            key={col} 
+            id={col} 
+            tasks={tasks.filter((t) => t.status === col)} 
+            onEditTask={(task) => setEditingTask(task)} 
+            isCatTheme={isCatTheme}
+          />
         ))}
       </div>
       <DragOverlay>

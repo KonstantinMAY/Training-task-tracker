@@ -1,45 +1,34 @@
 /* --- БАЗОВЫЕ НАСТРОЙКИ И ПЕРЕМЕННЫЕ --- */
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 :root {
-  /* СВЕТЛАЯ ТЕМА (по умолчанию) */
   --bg-main: #f4f5f7;
   --bg-column: #ebecf0;
   --bg-card: #ffffff;
-  --bg-header: #1e1e1e; /* Шапка теперь всегда темная */
+  --bg-header: #1e1e1e;
   --bg-modal: #ffffff;
   --bg-input: #ffffff;
-  
-  /* МЯГКИЙ ТЕКСТ И СЕРЫЕ РАМКИ */
   --text-main: #1f2937; 
   --text-muted: #6b7280;
   --border-color: #d1d5db; 
   --shadow-card: 0 1px 3px rgba(0,0,0,0.1);
   --shadow-modal: 0 8px 30px rgba(0,0,0,0.15);
-  
-  /* КНОПКИ ЧЕРНЫЕ С БЕЛЫМ ТЕКСТОМ */
   --btn-primary-bg: #1f2937;
   --btn-primary-text: #ffffff;
 }
 
 body.dark-theme {
-  /* ТЕМНАЯ ТЕМА */
   --bg-main: #000000;
   --bg-column: #121212;
   --bg-card: #1e1e1e;
   --bg-header: #1e1e1e;
   --bg-modal: #1e1e1e;
   --bg-input: #121212;
-  
   --text-main: #ffffff;
   --text-muted: #aaaaaa;
   --border-color: #333333;
   --shadow-card: 0 1px 3px rgba(0,0,0,0.5);
   --shadow-modal: 0 4px 12px rgba(0,0,0,0.5);
-  
-  /* В ТЕМНОЙ ТЕМЕ КНОПКИ БЕЛЫЕ */
   --btn-primary-bg: #ffffff;
   --btn-primary-text: #000000;
 }
@@ -52,232 +41,179 @@ body {
   transition: background-color 0.3s, color 0.3s;
 }
 
-.app-container {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-}
+.app-container { display: flex; flex-direction: column; height: 100vh; }
+.board-container { flex: 1; padding: 20px; overflow-x: auto; background-color: var(--bg-main); }
+.kanban-board { display: flex; gap: 20px; align-items: flex-start; padding-bottom: 20px; height: 100%; }
+.kanban-column { background-color: var(--bg-column); border: 1px solid var(--border-color); border-radius: 8px; width: 280px; min-width: 280px; display: flex; flex-direction: column; max-height: 100%; transition: background-color 0.3s, border-color 0.3s; }
+.kanban-column h3 { padding: 12px 15px; margin: 0; font-size: 16px; color: var(--text-main); border-bottom: 1px solid var(--border-color); }
+.column-content { padding: 10px; display: flex; flex-direction: column; gap: 10px; overflow-y: auto; min-height: 150px; }
 
-.board-container {
-  flex: 1;
-  padding: 20px;
-  overflow-x: auto;
-  background-color: var(--bg-main);
-}
+.task-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 6px; padding: 12px; box-shadow: var(--shadow-card); cursor: grab; user-select: none; transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.3s, border-color 0.3s; }
+.task-card:hover { transform: translateY(-3px); box-shadow: 0 8px 15px rgba(0,0,0,0.1); }
+.task-card:active { cursor: grabbing; }
+.task-card h4 { margin: 0 0 5px 0; font-size: 14px; color: var(--text-main); }
+.task-card p { margin: 0 0 10px 0; font-size: 12px; color: var(--text-muted); }
 
-/* --- СТИЛИ КАНБАН-ДОСКИ --- */
-.kanban-board {
-  display: flex;
-  gap: 20px;
-  align-items: flex-start;
-  padding-bottom: 20px;
-  height: 100%;
-}
-
-.kanban-column {
-  background-color: var(--bg-column);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  width: 280px;
-  min-width: 280px;
-  display: flex;
-  flex-direction: column;
-  max-height: 100%;
-  transition: background-color 0.3s, border-color 0.3s;
-}
-
-.kanban-column h3 {
-  padding: 12px 15px;
-  margin: 0;
-  font-size: 16px;
-  color: var(--text-main);
-  border-bottom: 1px solid var(--border-color);
-}
-
-.column-content {
-  padding: 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  overflow-y: auto;
-  min-height: 150px;
-}
-
-/* --- КАРТОЧКИ ЗАДАЧ --- */
-.task-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
-  padding: 12px;
-  box-shadow: var(--shadow-card);
-  cursor: grab;
-  user-select: none;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.3s, border-color 0.3s;
-}
-
-.task-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 15px rgba(0,0,0,0.1);
-}
-
-.task-card:active {
-  cursor: grabbing;
-}
-
-.task-card h4 {
-  margin: 0 0 5px 0;
-  font-size: 14px;
-  color: var(--text-main);
-}
-
-.task-card p {
-  margin: 0 0 10px 0;
-  font-size: 12px;
-  color: var(--text-muted);
-}
-
-/* --- ПРИОРИТЕТЫ --- */
-.priority {
-  font-size: 10px;
-  padding: 2px 6px;
-  border-radius: 4px;
-  text-transform: uppercase;
-  font-weight: bold;
-}
-
+.priority { font-size: 10px; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; font-weight: bold; }
 .priority.high { background-color: rgba(239, 68, 68, 0.2); color: #ef4444; }
 .priority.medium { background-color: rgba(245, 124, 0, 0.2); color: #f57c00; }
 .priority.low { background-color: rgba(0, 151, 167, 0.2); color: #0097a7; }
 
-/* --- КНОПКА ДОБАВЛЕНИЯ --- */
-.board-header-actions {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 20px;
-}
+.board-header-actions { display: flex; justify-content: flex-end; margin-bottom: 20px; }
+.btn-add-task { background-color: var(--btn-primary-bg); color: var(--btn-primary-text); border: none; padding: 10px 20px; border-radius: 6px; font-size: 16px; cursor: pointer; font-weight: bold; transition: all 0.2s; }
+.btn-add-task:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.15); }
 
-.btn-add-task {
-  background-color: var(--btn-primary-bg);
-  color: var(--btn-primary-text);
-  border: none;
-  padding: 10px 20px;
-  border-radius: 6px;
-  font-size: 16px;
-  cursor: pointer;
-  font-weight: bold;
-  transition: all 0.2s;
-}
-
-.btn-add-task:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(0,0,0,0.15);
-}
-
-/* --- МОДАЛЬНОЕ ОКНО --- */
-.modal-overlay {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background-color: rgba(0, 0, 0, 0.6);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-.modal-content {
-  background: var(--bg-modal);
-  border: 1px solid var(--border-color);
-  padding: 30px;
-  border-radius: 8px;
-  width: 400px;
-  box-shadow: var(--shadow-modal);
-  color: var(--text-main);
-}
-
-.modal-content h2 {
-  margin-top: 0;
-  margin-bottom: 20px;
-}
-
-.modal-form {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
-
-.modal-form input,
-.modal-form textarea,
-.modal-form select {
-  width: 100%;
-  padding: 10px;
-  background-color: var(--bg-input);
-  color: var(--text-main);
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  font-family: inherit;
-}
-
+.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.6); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+.modal-content { background: var(--bg-modal); border: 1px solid var(--border-color); padding: 30px; border-radius: 8px; width: 400px; box-shadow: var(--shadow-modal); color: var(--text-main); }
+.modal-content h2 { margin-top: 0; margin-bottom: 20px; }
+.modal-form { display: flex; flex-direction: column; gap: 15px; }
+.modal-form input, .modal-form textarea, .modal-form select { width: 100%; padding: 10px; background-color: var(--bg-input); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px; font-family: inherit; }
 .modal-form textarea { resize: vertical; min-height: 80px; }
+.modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px; }
+.btn-cancel { padding: 8px 16px; background-color: transparent; color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px; cursor: pointer; }
+.btn-submit { padding: 8px 16px; background-color: var(--btn-primary-bg); color: var(--btn-primary-text); border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
 
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 10px;
-}
-
-.btn-cancel {
-  padding: 8px 16px;
-  background-color: transparent;
-  color: var(--text-main);
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.btn-submit {
-  padding: 8px 16px;
-  background-color: var(--btn-primary-bg);
-  color: var(--btn-primary-text);
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: bold;
-}
-
-/* --- КНОПКИ НА КАРТОЧКАХ --- */
-.task-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 5px;
-}
-
+.task-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 5px; }
 .task-header h4 { margin: 0; flex: 1; }
-
 .task-actions { display: flex; gap: 5px; }
-
-.edit-btn, .delete-btn {
-  background: transparent;
-  border: none;
-  color: var(--text-muted);
-  font-size: 12px;
-  cursor: pointer;
-  padding: 2px 4px;
-  transition: color 0.2s;
-}
-
+.edit-btn, .delete-btn { background: transparent; border: none; color: var(--text-muted); font-size: 12px; cursor: pointer; padding: 2px 4px; transition: color 0.2s; }
 .edit-btn:hover { color: #facc15; }
 .delete-btn:hover { color: #ef4444; }
 
-/* --- СКРОЛЛБАР --- */
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: var(--bg-column); }
 ::-webkit-scrollbar-thumb { background: #888; border-radius: 4px; }
 ::-webkit-scrollbar-thumb:hover { background: #555; }
 
-/* --- МОБИЛЬНАЯ ВЕРСИЯ --- */
 @media (max-width: 768px) {
   .app-header { padding: 0 10px; height: 60px; }
   .board-container { padding: 10px; }
+}
+
+/* =========================================
+   КОТО-РЕЖИМ (FURRY THEME) - ГЛОБАЛЬНЫЙ
+   ========================================= */
+
+.app-container.cat-theme, .login-container.cat-theme {
+  --bg-main: #fff4e6 !important;
+  --bg-column: rgba(255, 250, 240, 0.85) !important;
+  --bg-card: #fffaf0 !important;
+  --bg-header: #5c3a21 !important;
+  --text-main: #4a2c11 !important;
+  --text-muted: #8b5a2b !important;
+  --border-color: #e8b88a !important;
+  --btn-primary-bg: #d2691e !important;
+  --btn-primary-text: #ffffff !important;
+}
+
+/* Фон с хаотичными пятнами (без сетки) */
+.app-container.cat-theme .board-container,
+.login-container.cat-theme {
+  background-color: #fff4e6 !important;
+  background-image: 
+    radial-gradient(circle at 10% 20%, #d2691e 4px, transparent 5px),
+    radial-gradient(circle at 80% 50%, #d2691e 7px, transparent 8px),
+    radial-gradient(circle at 40% 80%, #d2691e 5px, transparent 6px),
+    radial-gradient(circle at 60% 10%, #d2691e 3px, transparent 4px),
+    radial-gradient(circle at 30% 60%, #d2691e 8px, transparent 9px),
+    radial-gradient(circle at 90% 90%, #d2691e 6px, transparent 7px);
+  background-size: 250px 250px, 300px 300px, 200px 200px, 150px 150px, 350px 350px, 220px 220px;
+  background-position: 0 0, 50px 100px, 20px 50px, 150px 10px, 80px 120px, 100px 10px;
+}
+
+/* Коричневая шапка и ТЕМНО-РЫЖИЙ текст */
+.app-container.cat-theme .app-header {
+  background-color: #5c3a21 !important; 
+  border-bottom: 2px solid #cc5500 !important;
+}
+.app-container.cat-theme .app-header .logo,
+.app-container.cat-theme .app-header .user-email,
+.app-container.cat-theme .app-header .logout-btn,
+.app-container.cat-theme .app-header .theme-toggle,
+.app-container.cat-theme .app-header .cat-toggle-btn {
+  color: #cc5500 !important; /* Темно-рыжий (Burnt Orange) */
+}
+.app-container.cat-theme .app-header .avatar {
+  color: #000 !important; /* Буква на аватарке черная */
+}
+
+/* Ушки для формы логина (подняты на -20px) */
+.login-container.cat-theme .login-form {
+  position: relative;
+  margin-top: 18px;
+  border: 2px solid #e8b88a;
+  border-radius: 12px;
+  background: linear-gradient(145deg, #ffffff, #fffaf0);
+}
+.login-container.cat-theme .login-form::before,
+.login-container.cat-theme .login-form::after {
+  content: '';
+  position: absolute;
+  top: -20px; /* Подняли на рамку */
+  width: 26px;
+  height: 20px;
+  background: radial-gradient(circle at 50% 80%, #ffb6c1 35%, #e8b88a 40%);
+  clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+  z-index: 2;
+  filter: drop-shadow(0px 1px 1px rgba(0,0,0,0.1)); 
+}
+.login-container.cat-theme .login-form::before { left: 20px; }
+.login-container.cat-theme .login-form::after { right: 20px; }
+.login-container.cat-theme .toggle-auth { color: #cc5500 !important; }
+
+/* Карточки задач с ушками (подняты на -20px) */
+.cat-theme .kanban-column h3 { color: #cc5500 !important; font-weight: 900; border-bottom: 2px dashed #e8b88a; }
+.cat-theme .btn-add-task { background-color: #d2691e; color: #fff; border-radius: 20px; }
+
+.cat-theme .task-card {
+  position: relative;
+  margin-top: 14px !important;
+  border: 2px solid #e8b88a;
+  border-radius: 12px;
+  background: linear-gradient(145deg, #ffffff, #fffaf0);
+  box-shadow: 0 4px 10px rgba(210, 105, 30, 0.15);
+}
+.cat-theme .task-card::before,
+.cat-theme .task-card::after {
+  content: '';
+  position: absolute;
+  top: -20px; /* Подняли на рамку */
+  width: 26px;
+  height: 20px;
+  background: radial-gradient(circle at 50% 80%, #ffb6c1 35%, #e8b88a 40%);
+  clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+  z-index: 2;
+  filter: drop-shadow(0px 1px 1px rgba(0,0,0,0.1)); 
+}
+.cat-theme .task-card::before { left: 15px; transform-origin: bottom right; animation: twitchLeft 6s infinite ease-in-out; }
+.cat-theme .task-card::after { right: 15px; transform-origin: bottom left; animation: twitchRight 6s infinite ease-in-out; }
+
+/* Анимации ушек */
+@keyframes twitchLeft {
+  0%, 85%, 100% { transform: rotate(0deg); }
+  90% { transform: rotate(-15deg); }
+  95% { transform: rotate(5deg); }
+}
+@keyframes twitchRight {
+  0%, 85%, 100% { transform: rotate(0deg); }
+  90% { transform: rotate(15deg); }
+  95% { transform: rotate(-5deg); }
+}
+
+/* Кнопка лапки */
+.cat-toggle-btn {
+  background: transparent;
+  border: none;
+  color: #facc15;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s ease;
+}
+.cat-toggle-btn:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+  transform: rotate(15deg) scale(1.1);
 }
