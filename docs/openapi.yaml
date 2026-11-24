@@ -1,0 +1,681 @@
+openapi: 3.1.0
+x-contract-status: proposed
+x-open-questions:
+  - Базовый URL и префикс /api; адрес сервера и CORS не определены.
+  - Способ авторизации и передача учётных данных; токены/cookie намеренно не описаны.
+  - Кто генерирует Task.id: клиент (сейчас Date.now().toString()) или сервер.
+  - Привязка задач к пользователю и правила доступа к чужим задачам.
+  - PATCH или PUT для редактирования задачи; кто владеет deadline и его таймзона.
+  - Нужен ли порядок карточек и поле position/order.
+  - Формат аватара: data URL в JSON, отдельный файл или URL; ограничения размера и типов.
+  - Остаются ли тема/catTheme локальными и нужно ли очищать localStorage при выходе.
+  - Формат списка задач и нужна ли пагинация/фильтрация на сервере.
+
+info:
+  title: TaskTracker API — предлагаемый контракт
+  version: 0.1.0-draft
+  summary: Предлагаемый API-контракт для будущего взаимодействия frontend и backend
+  description: >-
+    ВСЕ endpoint'ы, параметры, тела запросов, ответы и схемы в этом файле — ПРЕДЛАГАЕМЫЙ
+    контракт, а не описание существующего API. Во frontend/src анализируемой Desktop-копии
+    нет ни одного HTTP-запроса: задачи хранятся в mockTasks и zustand persist с ключом
+    'kanban-storage', пользователь и настройки — в localStorage с ключами 'userEmail',
+    'theme', 'catTheme', 'avatarColor', 'avatarImage'. Адрес сервера, префикс, способ
+    авторизации, токены/cookie, структура базы данных и модель прав намеренно не описаны:
+    эти решения не определены и оставлены на согласование команде. Поля, помеченные как
+    предложение, отсутствуют в текущем интерфейсе или сейчас не передаются на сервер.
+  x-contract-status: proposed
+
+tags:
+  - name: auth
+    description: >
+      Предлагаемые операции входа, регистрации и выхода. Способ авторизации не выбран,
+      поэтому securitySchemes и security в спецификации отсутствуют.
+  - name: profile
+    description: >
+      Предлагаемые операции чтения и изменения профиля. Текущий frontend использует
+      только localStorage; серверная модель пользователя не определена.
+  - name: tasks
+    description: >
+      Предлагаемые операции с задачами канбана. Реальных запросов во frontend пока нет,
+      данные берутся из mockTasks и zustand persist.
+
+paths:
+  /api/auth/login:
+    post:
+      tags: [auth]
+      operationId: login
+      x-contract-status: proposed
+      summary: Вход пользователя — предлагаемый контракт
+      description: >-
+        Сейчас в Login.tsx:17-30 форма только проверяет email через includes('@') и длину
+        пароля от 3 символов, записывает userEmail в localStorage и делает navigate('/board').
+        Запроса к серверу нет. Ответ описан без токенов/cookie: если способ авторизации
+        будет выбран, поля сессии добавятся отдельно после согласования.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Успешный вход. Возвращаются данные пользователя; способ авторизации не описан.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/InvalidCredentials'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/auth/register:
+    post:
+      tags: [auth]
+      operationId: register
+      x-contract-status: proposed
+      summary: Регистрация пользователя — предлагаемый контракт
+      description: >-
+        Текущий frontend переключает только тексты формы; обработчик у входа и регистрации
+        один и тот же. Разделение на отдельные эндпоинты login/register — предложение.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: Пользователь создан. Возвращаются данные пользователя; способ авторизации не описан.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/auth/logout:
+    post:
+      tags: [auth]
+      operationId: logout
+      x-contract-status: proposed
+      summary: Выход пользователя — предлагаемый контракт
+      description: >-
+        Сейчас кнопка «Выйти» в Board.tsx:65 только делает navigate('/login') и НЕ очищает
+        localStorage. Endpoint предлагается только если выбранная модель авторизации
+        предполагает серверную сессию или отзыв токена. Если серверное состояние не
+        используется, endpoint может быть удалён из контракта.
+      responses:
+        '204':
+          description: >
+            Выход выполнен, тело не возвращается. Альтернатива после согласования — 200 с
+            { "success": true }; это поле в схемах намеренно не добавлено.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/users/me:
+    get:
+      tags: [profile]
+      operationId: getCurrentUser
+      x-contract-status: proposed
+      summary: Получение текущего профиля — предлагаемый контракт
+      description: >-
+        Board.tsx:31-34 и ProfileModal.tsx:9-17 сейчас читают userEmail, avatarColor и
+        avatarImage из localStorage. Fallback для email различается: 'User' в шапке и
+        'user@example.com' в модалке. GET-запроса нет. Модель пользователя на сервере
+        не определена, поэтому id и настройки аватара в схеме User помечены как предложение.
+      responses:
+        '200':
+          description: Профиль текущего пользователя.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    patch:
+      tags: [profile]
+      operationId: updateCurrentUser
+      x-contract-status: proposed
+      summary: Обновление настроек профиля — предлагаемый контракт
+      description: >-
+        ProfileModal.tsx:32-37 сейчас пишет avatarColor и avatarImage в localStorage и
+        перезагружает страницу. Загрузка файла превращается в base64 data URL через
+        FileReader. Предлагается отправлять те же два значения на сервер; формат
+        avatarImage (base64 в JSON или отдельный файл) и ограничения файла не согласованы.
+        Изменение email в интерфейсе отсутствует и в этот контракт не включено.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              x-contract-status: proposed
+              type: object
+              description: >-
+                Предлагаемое тело. Можно передать только цвет, только изображение или оба поля.
+              properties:
+                avatarColor:
+                  type: string
+                  pattern: '^#[0-9A-Fa-f]{6}$'
+                  description: >-
+                    hex-цвет из input type="color"; значение по умолчанию во frontend — '#facc15'.
+                    Pattern является предлагаемой проверкой формата.
+                avatarImage:
+                  type: [string, 'null']
+                  description: >-
+                    Сейчас это data URL (base64) или пустая строка. null или пустая строка
+                    означает отсутствие картинки. Хранить ли base64 в JSON или загружать
+                    файлом отдельным запросом — решение команды.
+      responses:
+        '200':
+          description: Профиль обновлён, возвращается актуальное представление User.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaType'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/users/me/avatar:
+    delete:
+      tags: [profile]
+      operationId: deleteCurrentUserAvatarAlternative
+      x-contract-status: proposed-alternative
+      summary: АЛЬТЕРНАТИВА — удаление аватара отдельным endpoint'ом
+      description: >-
+        АЛЬТЕРНАТИВНОЕ РЕШЕНИЕ, не зафиксированное команде. Может быть заменено запросом
+        PATCH /api/users/me с avatarImage: null и avatarColor: '#facc15'. Сейчас кнопка
+        «Сбросить» в ProfileModal.tsx:39-42 меняет только состояние компонента; изменения
+        попадают в localStorage только после «Сохранить». Отдельный DELETE предлагается
+        только если команда выберет отдельную операцию удаления файла/аватара.
+      responses:
+        '204':
+          description: Аватар удалён, тело не возвращается.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/tasks:
+    get:
+      tags: [tasks]
+      operationId: listTasks
+      x-contract-status: proposed
+      summary: Получение списка задач — предлагаемый контракт
+      description: >-
+        useTaskStore.ts:13-16 и 42-44 сейчас использует mockTasks и zustand persist с
+        ключом 'kanban-storage'. Запроса к серверу нет, состояний loading/error нет.
+        Текущий UI получает все задачи и сам фильтрует по статусу в KanbanBoard.tsx:156.
+      parameters:
+        - name: status
+          in: query
+          required: false
+          x-contract-status: proposed
+          description: >-
+            Предлагаемый параметр, если фильтрацию перенесут на сервер. Текущему интерфейсу
+            он не нужен; фронтенд фильтрует локально.
+          schema:
+            type: string
+            enum: [todo, in_progress, review, done]
+      responses:
+        '200':
+          description: Список задач. Выбран голый массив, потому что store ожидает Task[].
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Task'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      tags: [tasks]
+      operationId: createTask
+      x-contract-status: proposed
+      summary: Создание задачи — предлагаемый контракт
+      description: >-
+        AddTaskModal.tsx:19-36 сейчас создаёт Task с id = Date.now().toString(),
+        status = 'todo' и priority по умолчанию 'low', затем вызывает addTask. В
+        предлагаемом теле id и status не передаются: кто генерирует id и где задаётся
+        стартовый статус — на согласовании. Поле deadline в Task есть, но модалка его
+        не задаёт; его включение в CreateTask помечено как предложение.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTask'
+      responses:
+        '201':
+          description: Задача создана, возвращается созданная задача целиком.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/tasks/{taskId}:
+    parameters:
+      - $ref: '#/components/parameters/TaskId'
+    get:
+      tags: [tasks]
+      operationId: getTask
+      x-contract-status: proposed-additional
+      summary: ДОПОЛНИТЕЛЬНО — получение одной задачи
+      description: >-
+        ДОПОЛНИТЕЛЬНЫЙ ПРЕДЛАГАЕМЫЙ ENDPOINT. Текущему интерфейсу он не требуется: доска
+        загружает список целиком. Добавлен только на случай, если команда захочет получать
+        задачу по id или использовать прямой переход к карточке.
+      responses:
+        '200':
+          description: Задача найдена.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    patch:
+      tags: [tasks]
+      operationId: updateTask
+      x-contract-status: proposed
+      summary: Редактирование задачи — предлагаемый контракт
+      description: >-
+        EditTaskModal.tsx:28-40 вызывает updateTask({...task, title, description, priority}),
+        а store заменяет объект целиком по id. Редактируются только title, description и
+        priority; status и deadline сохраняются через spread. PATCH выбран как предложение;
+        если команда выберет полную замену, вместо него нужен PUT с полным Task.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTask'
+      responses:
+        '200':
+          description: Задача обновлена, возвращается актуальная задача целиком.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      tags: [tasks]
+      operationId: deleteTask
+      x-contract-status: proposed
+      summary: Удаление задачи — предлагаемый контракт
+      description: >-
+        KanbanBoard.tsx:41-44 вызывает deleteTask(task.id) без подтверждения. Store
+        удаляет задачу из массива. Запроса к серверу нет.
+      responses:
+        '204':
+          description: Задача удалена, тело не возвращается.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/tasks/{taskId}/status:
+    patch:
+      tags: [tasks]
+      operationId: updateTaskStatus
+      x-contract-status: proposed
+      summary: Перемещение задачи между колонками — предлагаемый контракт
+      description: >-
+        KanbanBoard.tsx:126-147 при drag&drop вызывает moveTask(taskId, newStatus).
+        Меняется только status. Перетаскивание на карточку в другой колонке берёт её
+        status; перетаскивание внутри той же колонки ничего не меняет. Порядок/позиция
+        в интерфейсе отсутствует, поэтому position/order в тело не добавлены.
+      parameters:
+        - $ref: '#/components/parameters/TaskId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTaskStatus'
+      responses:
+        '200':
+          description: Статус обновлён, возвращается актуальная задача целиком.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+components:
+  parameters:
+    TaskId:
+      name: taskId
+      in: path
+      required: true
+      x-contract-status: proposed
+      description: >-
+        Идентификатор задачи из Task.id. Сейчас создаётся на клиенте как Date.now().toString();
+        кто генерирует id в новом контракте — на согласовании.
+      schema:
+        type: string
+
+  responses:
+    BadRequest:
+      description: >-
+        Некорректные данные запроса. Например, пустой title, неверный priority/status
+        или некорректный формат цвета/email.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    InvalidCredentials:
+      description: >-
+        Неверная пара email/пароль. Способ авторизации не выбран, поэтому детали
+        проверки учётных данных остаются на согласовании.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Unauthorized:
+      description: >-
+        Запрос требует авторизации. Токены/cookie в спецификации не описаны: способ
+        авторизации не определён.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Forbidden:
+      description: >-
+        Нет прав на ресурс. Модель пользователей и прав доступа к задачам не определена.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    NotFound:
+      description: Задача или профиль не найдены.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Conflict:
+      description: >-
+        Конфликт, например email уже занят при регистрации. Правила уникальности
+        уточняются командой.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    PayloadTooLarge:
+      description: >-
+        Тело запроса слишком большое. Актуально, если аватар будет передаваться как
+        base64 в JSON; лимиты не согласованы.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    UnsupportedMediaType:
+      description: >-
+        Неподдерживаемый тип файла. Актуально, если команда выберет загрузку аватара
+        отдельным файлом; допустимые типы не согласованы.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    InternalServerError:
+      description: Внутренняя ошибка сервера.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+  schemas:
+    Task:
+      x-contract-status: proposed
+      type: object
+      description: >-
+        Предлагаемое представление задачи. Совпадает с полями интерфейса Task из
+        frontend/src/mockData.ts. id и deadline описаны с пометками о текущей реализации.
+      required: [id, title, description, status, priority]
+      properties:
+        id:
+          type: string
+          description: >-
+            Сейчас генерируется во frontend как Date.now().toString(). Кто генерирует
+            id в серверном контракте — на согласовании.
+        title:
+          type: string
+          description: Название задачи; в формах проверяется через trim().
+        description:
+          type: string
+          description: Описание задачи; может быть пустой строкой.
+        status:
+          type: string
+          enum: [todo, in_progress, review, done]
+          description: >-
+            Значения совпадают с COLUMNS из KanbanBoard.tsx:14 и типами из mockData.ts.
+        priority:
+          type: string
+          enum: [low, medium, high]
+          description: Значения совпадают с options в модалках создания/редактирования.
+        deadline:
+          type: string
+          format: date
+          description: >-
+            Необязательное поле. Текущие моки используют формат YYYY-MM-DD;
+            в карточке дедлайн только отображается и участвует в подсчёте дней.
+            Текущие модалки его не задают.
+
+    CreateTask:
+      x-contract-status: proposed
+      type: object
+      description: >-
+        Предлагаемое тело создания задачи. Текущий AddTaskModal дополнительно создаёт
+        id и status: 'todo' на клиенте; эти поля в тело не включены и являются вопросом
+        команде.
+      required: [title, description, priority]
+      properties:
+        title:
+          type: string
+          description: Обязательное название задачи.
+        description:
+          type: string
+          description: Описание задачи; может быть пустой строкой.
+        priority:
+          type: string
+          enum: [low, medium, high]
+          description: По умолчанию во frontend выбрано 'low'.
+        deadline:
+          type: string
+          format: date
+          description: >-
+            Необязательное ПРЕДЛОЖЕНИЕ. Поле есть в модели Task, но текущая форма
+            создания задачи его не заполняет.
+
+    UpdateTask:
+      x-contract-status: proposed
+      type: object
+      description: >-
+        Предлагаемое тело редактирования. EditTaskModal отправляет сразу title,
+        description и priority; status и deadline сохраняются из исходной задачи.
+        Если команда выберет PUT вместо PATCH, тело запроса должно будет содержать
+        полный Task.
+      required: [title, description, priority]
+      properties:
+        title:
+          type: string
+          description: Название задачи, обязательно для текущего контракта.
+        description:
+          type: string
+          description: Описание задачи.
+        priority:
+          type: string
+          enum: [low, medium, high]
+        deadline:
+          type: string
+          format: date
+          description: >-
+            Необязательное ПРЕДЛОЖЕНИЕ. Текущая форма редактирования дедлайн не меняет.
+
+    UpdateTaskStatus:
+      x-contract-status: proposed
+      type: object
+      description: Предлагаемое тело перемещения задачи между колонками.
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [todo, in_progress, review, done]
+          description: >-
+            Целевая колонка. Позиция/порядок внутри колонки во frontend отсутствуют
+            и в схему не добавлены.
+
+    User:
+      x-contract-status: proposed
+      type: object
+      description: >-
+        Предлагаемая модель пользователя. Текущий frontend хранит только email и
+        настройки аватара в localStorage; отдельного интерфейса User нет.
+      required: [email]
+      properties:
+        id:
+          type: string
+          description: >-
+            ПРЕДЛОЖЕНИЕ. Во frontend пользовательский id отсутствует. Добавляется
+            только если команда решит, что серверная модель пользователя нужна.
+        email:
+          type: string
+          description: >-
+            Email пользователя. Сейчас сохраняется в localStorage по ключу userEmail.
+        avatarColor:
+          type: string
+          pattern: '^#[0-9A-Fa-f]{6}$'
+          description: >-
+            hex-цвет аватара; по умолчанию во frontend '#facc15'. Pattern —
+            предлагаемая проверка.
+        avatarImage:
+          type: [string, 'null']
+          description: >-
+            Сейчас хранится в localStorage как data URL (base64) или пустая строка.
+            Формат серверного значения не выбран: data URL, URL или отдельный файл —
+            на согласовании. null означает отсутствие аватара.
+
+    LoginRequest:
+      x-contract-status: proposed
+      type: object
+      description: Предлагаемое тело входа. Текущая форма не делает запрос к серверу.
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+          description: >-
+            Сейчас проверяется только через email.includes('@'). format: email —
+            предлагаемое ужесточение, серверные правила на согласовании.
+        password:
+          type: string
+          minLength: 3
+          description: >-
+            Текущая клиентская проверка: не короче 3 символов. Политика паролей
+            на сервере не определена.
+
+    RegisterRequest:
+      x-contract-status: proposed
+      type: object
+      description: >-
+        Предлагаемое тело регистрации. Сейчас используется тот же обработчик, что и
+        для входа; разделение операций — предложение.
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+          description: >-
+            Сейчас проверяется только через email.includes('@'). format: email и
+            требование уникальности — предложения на согласование.
+        password:
+          type: string
+          minLength: 3
+          description: >-
+            Текущая клиентская проверка: не короче 3 символов. Политика паролей
+            на сервере не определена.
+
+    ErrorResponse:
+      x-contract-status: proposed
+      type: object
+      description: >-
+        Предлагаемый формат ошибки. Сейчас во frontend отображается только одна
+        строка локальной ошибки; code и details добавлены как предложение.
+      required: [message]
+      properties:
+        message:
+          type: string
+          description: Читаемое сообщение об ошибке.
+        code:
+          type: string
+          description: ПРЕДЛОЖЕНИЕ — машиночитаемый код ошибки.
+        details:
+          type: object
+          description: ПРЕДЛОЖЕНИЕ — ошибки по полям.
+          additionalProperties:
+            type: array
+            items:
+              type: string
