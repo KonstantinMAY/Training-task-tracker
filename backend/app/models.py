@@ -1,4 +1,5 @@
-from sqlalchemy import Column, String, ForeignKey
+from sqlalchemy import Column, ForeignKey, Integer, String
+from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship
 from .database import Base
 
@@ -13,6 +14,22 @@ class User(Base):
 
     tasks = relationship("Task", back_populates="owner", cascade="all, delete-orphan")
 
+    @hybrid_property
+    def avatarColor(self):
+        return self.avatar_color or "#facc15"
+
+    @avatarColor.setter
+    def avatarColor(self, value):
+        self.avatar_color = value
+
+    @hybrid_property
+    def avatarImage(self):
+        return self.avatar_image
+
+    @avatarImage.setter
+    def avatarImage(self, value):
+        self.avatar_image = value
+
 class Task(Base):
     __tablename__ = "tasks"
 
@@ -25,3 +42,9 @@ class Task(Base):
     owner_id = Column(String, ForeignKey("users.id"))
 
     owner = relationship("User", back_populates="tasks")
+
+class RevokedToken(Base):
+    __tablename__ = "revoked_tokens"
+
+    jti = Column(String, primary_key=True)
+    expires_at = Column(Integer, nullable=False, index=True)
