@@ -1,3 +1,4 @@
+import { useTaskStore } from '../store/useTaskStore';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import KanbanBoard from '../components/KanbanBoard';
@@ -6,6 +7,12 @@ import ProfileModal from '../components/ProfileModal';
 
 export default function Board() {
   const navigate = useNavigate();
+  const loadTasks = useTaskStore((state) => state.loadTasks);
+
+useEffect(() => {
+  loadTasks();
+}, [loadTasks]);
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   
@@ -62,7 +69,11 @@ export default function Board() {
             <span className="user-email">{userEmail}</span>
           </div>
           
-          <button className="logout-btn" onClick={() => navigate('/login')}>Выйти</button>
+          <button className="logout-btn" onClick={() => { localStorage.removeItem('access_token'); localStorage.removeItem('userEmail'); localStorage.removeItem('avatarColor'); localStorage.removeItem('avatarImage'); useTaskStore.getState().resetTasks(); navigate('/login');
+  }}
+>
+  Выйти
+</button>
         </div>
       </header>
       

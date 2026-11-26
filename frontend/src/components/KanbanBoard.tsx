@@ -48,7 +48,7 @@ function TaskCard({ task, onEdit }: { task: Task; onEdit: (task: Task) => void }
     onEdit(task);
   };
 
-  const calculateDeadline = (dateStr?: string) => {
+  const calculateDeadline = (dateStr?: string | null) => {
     if (!dateStr) return null;
     const today = new Date();
     today.setHours(0, 0, 0, 0);

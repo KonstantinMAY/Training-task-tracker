@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useTaskStore } from '../store/useTaskStore';
 import type { Task } from '../mockData';
 
@@ -8,34 +8,30 @@ interface EditTaskModalProps {
   onClose: () => void;
 }
 
-export default function EditTaskModal({ task, isOpen, onClose }: EditTaskModalProps) {
+interface EditTaskFormProps {
+  task: Task;
+  onClose: () => void;
+}
+
+function EditTaskForm({ task, onClose }: EditTaskFormProps) {
   const updateTask = useTaskStore((state) => state.updateTask);
-  
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [priority, setPriority] = useState<'low' | 'medium' | 'high'>('low');
 
-  useEffect(() => {
-    if (task) {
-      setTitle(task.title);
-      setDescription(task.description);
-      setPriority(task.priority);
-    }
-  }, [task]);
+  const [title, setTitle] = useState(task.title);
+  const [description, setDescription] = useState(task.description);
+  const [priority, setPriority] = useState<'low' | 'medium' | 'high'>(task.priority);
 
-  if (!isOpen || !task) return null;
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     if (!title.trim()) return;
 
-    updateTask({
+    await updateTask({
       ...task,
-      title,
+      title: title.trim(),
       description,
       priority,
     });
-    
+
     onClose();
   };
 
@@ -43,6 +39,7 @@ export default function EditTaskModal({ task, isOpen, onClose }: EditTaskModalPr
     <div className="modal-overlay">
       <div className="modal-content">
         <h2>Редактировать задачу</h2>
+
         <form onSubmit={handleSubmit} className="modal-form">
           <input
             type="text"
@@ -51,14 +48,15 @@ export default function EditTaskModal({ task, isOpen, onClose }: EditTaskModalPr
             onChange={(e) => setTitle(e.target.value)}
             required
           />
+
           <textarea
             placeholder="Описание задачи"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
           />
-          
-          <select 
-            value={priority} 
+
+          <select
+            value={priority}
             onChange={(e) => setPriority(e.target.value as 'low' | 'medium' | 'high')}
           >
             <option value="low">Низкий приоритет</option>
@@ -67,11 +65,27 @@ export default function EditTaskModal({ task, isOpen, onClose }: EditTaskModalPr
           </select>
 
           <div className="modal-actions">
-            <button type="button" onClick={onClose} className="btn-cancel">Отмена</button>
-            <button type="submit" className="btn-submit">Сохранить</button>
+            <button type="button" onClick={onClose} className="btn-cancel">
+              Отмена
+            </button>
+            <button type="submit" className="btn-submit">
+              Сохранить
+            </button>
           </div>
         </form>
       </div>
     </div>
+  );
+}
+
+export default function EditTaskModal({ task, isOpen, onClose }: EditTaskModalProps) {
+  if (!isOpen || !task) return null;
+
+  return (
+    <EditTaskForm
+      key={task.id}
+      task={task}
+      onClose={onClose}
+    />
   );
 }

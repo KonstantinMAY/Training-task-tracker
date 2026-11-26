@@ -1,46 +1,137 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import { mockTasks, type Task } from '../mockData';
+import { apiRequest } from '../api';
+import type { Task } from '../mockData';
 
 interface TaskState {
   tasks: Task[];
-  moveTask: (taskId: string, newStatus: Task['status']) => void;
-  addTask: (task: Task) => void;
-  deleteTask: (taskId: string) => void;
-  updateTask: (updatedTask: Task) => void;
+  isLoading: boolean;
+  error: string | null;
+
+  loadTasks: () => Promise<void>;
+  addTask: (task: Omit<Task, 'id' | 'status'>) => Promise<void>;
+  deleteTask: (taskId: string) => Promise<void>;
+  updateTask: (task: Task) => Promise<void>;
+  moveTask: (taskId: string, newStatus: Task['status']) => Promise<void>;
+  resetTasks: () => void;
 }
 
-export const useTaskStore = create<TaskState>()(
-  persist(
-    (set) => ({
-      tasks: mockTasks,
-      
-      moveTask: (taskId, newStatus) =>
-        set((state) => ({
-          tasks: state.tasks.map((task) =>
-            task.id === taskId ? { ...task, status: newStatus } : task
-          ),
-        })),
+export const useTaskStore = create<TaskState>((set) => ({
+  tasks: [],
+  isLoading: false,
+  error: null,
 
-      addTask: (newTask) =>
-        set((state) => ({
-          tasks: [...state.tasks, newTask],
-        })),
+  loadTasks: async () => {
+    set({ isLoading: true, error: null });
 
-      deleteTask: (taskId) =>
-        set((state) => ({
-          tasks: state.tasks.filter((task) => task.id !== taskId),
-        })),
-
-      updateTask: (updatedTask) =>
-        set((state) => ({
-          tasks: state.tasks.map((task) =>
-            task.id === updatedTask.id ? updatedTask : task
-          ),
-        })),
-    }),
-    {
-      name: 'kanban-storage',
+    try {
+      const tasks = await apiRequest<Task[]>('/api/tasks');
+      set({ tasks, isLoading: false });
+    } catch (error) {
+      set({
+        error: error instanceof Error
+          ? error.message
+          : 'Не удалось загрузить задачи',
+        isLoading: false,
+      });
     }
-  )
-);
+  },
+
+  addTask: async (taskData) => {
+    try {
+      const newTask = await apiRequest<Task>('/api/tasks', {
+        method: 'POST',
+        body: JSON.stringify(taskData),
+      });
+
+      set((state) => ({
+        tasks: [...state.tasks, newTask],
+        error: null,
+      }));
+    } catch (error) {
+      set({
+        error: error instanceof Error
+          ? error.message
+          : 'Не удалось создать задачу',
+      });
+    }
+  },
+
+  deleteTask: async (taskId) => {
+    try {
+      await apiRequest<void>(`/api/tasks/${taskId}`, {
+        method: 'DELETE',
+      });
+
+      set((state) => ({
+        tasks: state.tasks.filter((task) => task.id !== taskId),
+        error: null,
+      }));
+    } catch (error) {
+      set({
+        error: error instanceof Error
+          ? error.message
+          : 'Не удалось удалить задачу',
+      });
+    }
+  },
+
+  updateTask: async (task) => {
+    try {
+      const updatedTask = await apiRequest<Task>(`/api/tasks/${task.id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({
+          title: task.title,
+          description: task.description,
+          priority: task.priority,
+          deadline: task.deadline ?? null,
+        }),
+      });
+
+      set((state) => ({
+        tasks: state.tasks.map((item) =>
+          item.id === task.id ? updatedTask : item
+        ),
+        error: null,
+      }));
+    } catch (error) {
+      set({
+        error: error instanceof Error
+          ? error.message
+          : 'Не удалось обновить задачу',
+      });
+    }
+  },
+
+  moveTask: async (taskId, newStatus) => {
+    try {
+      const updatedTask = await apiRequest<Task>(
+        `/api/tasks/${taskId}/status`,
+        {
+          method: 'PATCH',
+          body: JSON.stringify({ status: newStatus }),
+        }
+      );
+
+      set((state) => ({
+        tasks: state.tasks.map((task) =>
+          task.id === taskId ? updatedTask : task
+        ),
+        error: null,
+      }));
+    } catch (error) {
+      set({
+        error: error instanceof Error
+          ? error.message
+          : 'Не удалось переместить задачу',
+      });
+    }
+  },
+
+  resetTasks: () => {
+    set({
+      tasks: [],
+      error: null,
+      isLoading: false,
+    });
+  },
+}));
