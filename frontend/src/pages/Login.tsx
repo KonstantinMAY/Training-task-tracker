@@ -1,6 +1,37 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiRequest } from '../api';
+import { useAuthStore } from '../store/useAuthStore';
+import loginTexts from '../loginTexts.json';
+
+interface LoginTexts {
+  catTheme: {
+    loginTitle: string;
+    registerTitle: string;
+    loginSubtitle: string;
+    registerSubtitle: string;
+    loginButton: string;
+    registerButton: string;
+    loading: string;
+    toggleToRegister: string;
+    toggleToLogin: string;
+    themeButton: string;
+  };
+  defaultTheme: {
+    loginTitle: string;
+    registerTitle: string;
+    loginSubtitle: string;
+    registerSubtitle: string;
+    loginButton: string;
+    registerButton: string;
+    loading: string;
+    toggleToRegister: string;
+    toggleToLogin: string;
+    themeButton: string;
+  };
+}
+
+const data = loginTexts as LoginTexts;
 
 interface AuthResponse {
   user: {
@@ -13,21 +44,59 @@ interface AuthResponse {
   token_type: string;
 }
 
+type Theme = 'cat' | 'default';
+
 export default function Login() {
   const navigate = useNavigate();
+  const setToken = useAuthStore((state) => state.setToken);
+
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const [isCatTheme, setIsCatTheme] = useState(
-    () => localStorage.getItem('catTheme') === 'true'
-  );
+  const [theme, setTheme] = useState<Theme>(() => {
+    return localStorage.getItem('theme') === 'cat' ? 'cat' : 'default';
+  });
+
+  const [authResult, setAuthResult] = useState<AuthResponse | null>(null);
+
+  const isCatTheme = theme === 'cat';
+  const texts = isCatTheme
+    ? data.catTheme
+    : data.defaultTheme;
+
+  const submitButtonText = loading
+    ? texts.loading
+    : isLogin
+      ? texts.loginButton
+      : texts.registerButton;
+
+  const toggleAuthText = isLogin
+    ? texts.toggleToRegister
+    : texts.toggleToLogin;
+
+  const title = isLogin ? texts.loginTitle : texts.registerTitle;
+  const subtitle = isLogin
+    ? texts.loginSubtitle
+    : texts.registerSubtitle;
 
   useEffect(() => {
-    localStorage.setItem('catTheme', String(isCatTheme));
-  }, [isCatTheme]);
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  useEffect(() => {
+    if (!authResult) return;
+
+    localStorage.setItem('access_token', authResult.access_token);
+    localStorage.setItem('userEmail', authResult.user.email);
+    localStorage.setItem('avatarColor', authResult.user.avatarColor);
+
+    setToken(authResult.access_token);
+
+    navigate('/board');
+  }, [authResult, navigate, setToken]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,21 +117,20 @@ export default function Login() {
     try {
       const result = await apiRequest<AuthResponse>(
         isLogin ? '/api/auth/login' : '/api/auth/register',
+        null,
         {
           method: 'POST',
           body: JSON.stringify({ email, password }),
         }
       );
 
-      localStorage.setItem('access_token', result.access_token);
-      localStorage.setItem('userEmail', result.user.email);
-      localStorage.setItem('avatarColor', result.user.avatarColor);
-
-      navigate('/board');
+      setAuthResult(result);
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : 'Не удалось выполнить запрос'
-      );
+      const errorMessage = err instanceof Error
+        ? err.message
+        : 'Не удалось выполнить запрос';
+
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -72,9 +140,11 @@ export default function Login() {
     <div className={`login-container ${isCatTheme ? 'cat-theme' : ''}`}>
       <button
         className="cat-toggle-btn"
-        onClick={() => setIsCatTheme(!isCatTheme)}
+        onClick={() =>
+          setTheme(isCatTheme ? 'default' : 'cat')
+        }
         style={{ position: 'absolute', top: '20px', right: '20px' }}
-        title="Включить/выключить кото-режим"
+        title={texts.themeButton}
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -96,21 +166,9 @@ export default function Login() {
       </button>
 
       <form onSubmit={handleSubmit} className="login-form">
-        <h2>
-          {isLogin
-            ? isCatTheme ? 'С возвращением, хозяин!' : 'С возвращением!'
-            : isCatTheme ? 'Создать ошейник' : 'Создать аккаунт'}
-        </h2>
+        <h2>{title}</h2>
 
-        <p className="login-subtitle">
-          {isLogin
-            ? isCatTheme
-              ? 'Войдите чтобы продолжить охоту'
-              : 'Войдите, чтобы продолжить работу'
-            : isCatTheme
-              ? 'Зарегистрируйтесь чтобы начать охоту'
-              : 'Зарегистрируйтесь, чтобы начать'}
-        </p>
+        <p className="login-subtitle">{subtitle}</p>
 
         {error && <div className="error-message">{error}</div>}
 
@@ -135,9 +193,7 @@ export default function Login() {
         </div>
 
         <button type="submit" className="login-btn" disabled={loading}>
-          {loading
-            ? 'Подождите...'
-            : isLogin ? 'Войти' : 'Зарегистрироваться'}
+          {submitButtonText}
         </button>
 
         <p
@@ -146,13 +202,8 @@ export default function Login() {
             setIsLogin(!isLogin);
             setError('');
           }}
-        >{isLogin
-            ? isCatTheme
-              ? 'Нету ошейника? Зарегистрироваться'
-              : 'Нет аккаунта? Зарегистрироваться'
-            : isCatTheme
-              ? 'У тебя уже есть ошейник? Войти'
-              : 'Уже есть аккаунт? Войти'}
+        >
+          {toggleAuthText}
         </p>
       </form>
     </div>

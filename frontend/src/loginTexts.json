@@ -1,0 +1,26 @@
+{
+  "catTheme": {
+    "loginTitle": "С возвращением, хозяин!",
+    "registerTitle": "Создать ошейник",
+    "loginSubtitle": "Войдите чтобы продолжить охоту",
+    "registerSubtitle": "Зарегистрируйтесь чтобы начать охоту",
+    "loginButton": "Войти",
+    "registerButton": "Зарегистрироваться",
+    "loading": "Подождите...",
+    "toggleToRegister": "Нету ошейника? Зарегистрироваться",
+    "toggleToLogin": "У тебя уже есть ошейник? Войти",
+    "themeButton": "Включить/выключить кото-режим"
+  },
+  "defaultTheme": {
+    "loginTitle": "С возвращением!",
+    "registerTitle": "Создать аккаунт",
+    "loginSubtitle": "Войдите, чтобы продолжить работу",
+    "registerSubtitle": "Зарегистрируйтесь, чтобы начать",
+    "loginButton": "Войти",
+    "registerButton": "Зарегистрироваться",
+    "loading": "Подождите...",
+    "toggleToRegister": "Нет аккаунта? Зарегистрироваться",
+    "toggleToLogin": "Уже есть аккаунт? Войти",
+    "themeButton": "Включить/выключить кото-режим"
+  }
+}

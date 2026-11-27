@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { apiRequest } from '../api';
+import { useAuthStore } from './useAuthStore';
 import type { Task } from '../mockData';
 
 interface TaskState {
@@ -24,13 +25,17 @@ export const useTaskStore = create<TaskState>((set) => ({
     set({ isLoading: true, error: null });
 
     try {
-      const tasks = await apiRequest<Task[]>('/api/tasks');
+      const token = useAuthStore.getState().token;
+      const tasks = await apiRequest<Task[]>('/api/tasks', token);
+
       set({ tasks, isLoading: false });
     } catch (error) {
+      const errorMessage = error instanceof Error
+        ? error.message
+        : 'Не удалось загрузить задачи';
+
       set({
-        error: error instanceof Error
-          ? error.message
-          : 'Не удалось загрузить задачи',
+        error: errorMessage,
         isLoading: false,
       });
     }
@@ -38,7 +43,9 @@ export const useTaskStore = create<TaskState>((set) => ({
 
   addTask: async (taskData) => {
     try {
-      const newTask = await apiRequest<Task>('/api/tasks', {
+      const token = useAuthStore.getState().token;
+
+      const newTask = await apiRequest<Task>('/api/tasks', token, {
         method: 'POST',
         body: JSON.stringify(taskData),
       });
@@ -58,7 +65,9 @@ export const useTaskStore = create<TaskState>((set) => ({
 
   deleteTask: async (taskId) => {
     try {
-      await apiRequest<void>(`/api/tasks/${taskId}`, {
+      const token = useAuthStore.getState().token;
+
+      await apiRequest<void>(`/api/tasks/${taskId}`, token, {
         method: 'DELETE',
       });
 
@@ -67,25 +76,33 @@ export const useTaskStore = create<TaskState>((set) => ({
         error: null,
       }));
     } catch (error) {
+      const errorMessage = error instanceof Error
+        ? error.message
+        : 'Не удалось удалить задачу';
+
       set({
-        error: error instanceof Error
-          ? error.message
-          : 'Не удалось удалить задачу',
+        error: errorMessage,
       });
     }
   },
 
   updateTask: async (task) => {
     try {
-      const updatedTask = await apiRequest<Task>(`/api/tasks/${task.id}`, {
-        method: 'PATCH',
-        body: JSON.stringify({
-          title: task.title,
-          description: task.description,
-          priority: task.priority,
-          deadline: task.deadline ?? null,
-        }),
-      });
+      const token = useAuthStore.getState().token;
+
+      const updatedTask = await apiRequest<Task>(
+        `/api/tasks/${task.id}`,
+        token,
+        {
+          method: 'PATCH',
+          body: JSON.stringify({
+            title: task.title,
+            description: task.description,
+            priority: task.priority,
+            deadline: task.deadline ?? null,
+          }),
+        }
+      );
 
       set((state) => ({
         tasks: state.tasks.map((item) =>
@@ -104,8 +121,11 @@ export const useTaskStore = create<TaskState>((set) => ({
 
   moveTask: async (taskId, newStatus) => {
     try {
+      const token = useAuthStore.getState().token;
+
       const updatedTask = await apiRequest<Task>(
         `/api/tasks/${taskId}/status`,
+        token,
         {
           method: 'PATCH',
           body: JSON.stringify({ status: newStatus }),
@@ -119,10 +139,12 @@ export const useTaskStore = create<TaskState>((set) => ({
         error: null,
       }));
     } catch (error) {
+      const errorMessage = error instanceof Error
+        ? error.message
+        : 'Не удалось переместить задачу';
+
       set({
-        error: error instanceof Error
-          ? error.message
-          : 'Не удалось переместить задачу',
+        error: errorMessage,
       });
     }
   },

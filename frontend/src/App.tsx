@@ -7,11 +7,8 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* По умолчанию перекидываем на страницу логина */}
         <Route path="/" element={<Navigate to="/login" replace />} />
-        {/* Страница входа (делает Фронтендер 2) */}
         <Route path="/login" element={<Login />} />
-        {/* Сама доска (делает Тимлид + Фронтендер 3) */}
         <Route path="/board" element={<Board />} />
       </Routes>
     </BrowserRouter>

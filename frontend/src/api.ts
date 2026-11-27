@@ -1,10 +1,14 @@
-const API_URL = 'http://127.0.0.1:8000';
+const API_URL = import.meta.env.VITE_API_URL;
 
 export async function apiRequest<T>(
   path: string,
+  token: string | null,
   options: RequestInit = {}
 ): Promise<T> {
-  const token = localStorage.getItem('access_token');
+  if (!API_URL) {
+    throw new Error('Не задан адрес API в переменной VITE_API_URL');
+  }
+
   const headers = new Headers(options.headers);
 
   if (options.body) {
