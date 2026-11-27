@@ -94,7 +94,6 @@ export default function Login() {
     localStorage.setItem('avatarColor', authResult.user.avatarColor);
 
     setToken(authResult.access_token);
-
     navigate('/board');
   }, [authResult, navigate, setToken]);
 
@@ -120,7 +119,7 @@ export default function Login() {
         null,
         {
           method: 'POST',
-          body: JSON.stringify({ email, password }),
+          data: { email, password },
         }
       );
 

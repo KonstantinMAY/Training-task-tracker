@@ -47,7 +47,7 @@ export const useTaskStore = create<TaskState>((set) => ({
 
       const newTask = await apiRequest<Task>('/api/tasks', token, {
         method: 'POST',
-        body: JSON.stringify(taskData),
+        data: taskData,
       });
 
       set((state) => ({
@@ -95,12 +95,12 @@ export const useTaskStore = create<TaskState>((set) => ({
         token,
         {
           method: 'PATCH',
-          body: JSON.stringify({
+          data: {
             title: task.title,
             description: task.description,
             priority: task.priority,
             deadline: task.deadline ?? null,
-          }),
+          },
         }
       );
 
@@ -128,7 +128,7 @@ export const useTaskStore = create<TaskState>((set) => ({
         token,
         {
           method: 'PATCH',
-          body: JSON.stringify({ status: newStatus }),
+          data: { status: newStatus },
         }
       );
 
